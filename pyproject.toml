@@ -1,0 +1,9 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trading-sentiment-analysis"
+version = "1.0.0"
+description = "Trading Sentiment Analysis Dashboard"
+requires-python = ">=3.8"
