@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Upload Analysis{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-center mb-4">
+            <i class="fas fa-chart-bar me-2"></i>
+            Analysis Dashboard
+        </h2>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="fas fa-exchange-alt fa-2x mb-2"></i>
+                <h5>Total Trades</h5>
+                <h3>{{ insights.total_trades or 'N/A' }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h5>Unique Traders</h5>
+                <h3>{{ insights.unique_traders or 'N/A' }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="fas fa-trophy fa-2x mb-2"></i>
+                <h5>Profitable Trades</h5>
+                <h3>{{ insights.profitable_trades or 'N/A' }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <i class="fas fa-calendar fa-2x mb-2"></i>
+                <h5>Date Range</h5>
+                <p class="mb-0 small">{{ insights.date_range or 'N/A' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Performance Card -->
+{% if model_results %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card model-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>
+                    AI Model Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h3>{{ "%.1f"|format(model_results.accuracy * 100) }}%</h3>
+                        <p class="mb-0">Prediction Accuracy</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3>{{ model_results.total_samples }}</h3>
+                        <p class="mb-0">Training Samples</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3>{{ model_results.test_samples }}</h3>
+                        <p class="mb-0">Test Samples</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h3>{{ model_results.feature_importance|length }}</h3>
+                        <p class="mb-0">Features Used</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Charts -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-dollar-sign me-2"></i>
+                    Average PnL by Market Sentiment
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="/static/plots/pnl_by_sentiment.png" class="img-fluid" alt="PnL by Sentiment">
+                <p class="text-muted mt-2">
+                    Shows how profitable traders are during different market sentiment periods
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-area me-2"></i>
+                    Market Sentiment Over Time
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="/static/plots/sentiment_timeline.png" class="img-fluid" alt="Sentiment Timeline">
+                <p class="text-muted mt-2">
+                    Timeline showing the distribution of fear, greed, and neutral sentiment
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    Top Performing Traders
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="/static/plots/top_traders.png" class="img-fluid" alt="Top Traders">
+                <p class="text-muted mt-2">
+                    Ranking of traders by total profit and loss performance
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-balance-scale me-2"></i>
+                    Leverage Usage by Sentiment
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="/static/plots/leverage_by_sentiment.png" class="img-fluid" alt="Leverage by Sentiment">
+                <p class="text-muted mt-2">
+                    Average leverage used by traders in different market conditions
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Visualizations -->
+    {% if model_results %}
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-brain me-2"></i>
+                    Model Confusion Matrix
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="/static/plots/confusion_matrix.png" class="img-fluid" alt="Confusion Matrix">
+                <p class="text-muted mt-2">
+                    Model accuracy in predicting profitable vs unprofitable trades
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Feature Importance
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <img src="/static/plots/feature_importance.png" class="img-fluid" alt="Feature Importance">
+                <p class="text-muted mt-2">
+                    Which factors are most important for predicting trading success
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-primary">
+                <i class="fas fa-cloud-upload-alt me-3"></i>
+                Upload-Based Analysis
+            </h1>
+            <p class="lead text-muted">
+                Upload your CSV files to analyze trader behavior vs market sentiment with AI-powered insights
+            </p>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>File Limits:</strong> Maximum 1GB per file. Very large files will be automatically sampled for analysis.
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <form method="POST" action="/upload" enctype="multipart/form-data" id="uploadForm">
+            <div class="row g-4 mb-5">
+                <!-- Sentiment File Upload -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-heart me-2"></i>
+                                Market Sentiment Data
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-area">
+                                <input type="file" name="sentiment_file" id="sentiment_file" 
+                                       accept=".csv" required class="d-none">
+                                <label for="sentiment_file" class="upload-text" style="cursor: pointer;">
+                                    <i class="fas fa-upload fa-3x text-primary mb-3 d-block"></i>
+                                    <h5>Drop CSV file here or click to browse</h5>
+                                    <p class="text-muted mb-0">Fear/Greed Index or similar sentiment data</p>
+                                </label>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <strong>Expected columns:</strong> date, sentiment_value/fear_greed_index, classification (optional)
+                                </small>
+                                <div id="sentiment-file-info" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trader File Upload -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-users me-2"></i>
+                                Trader Performance Data
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-area">
+                                <input type="file" name="trader_file" id="trader_file" 
+                                       accept=".csv" required class="d-none">
+                                <label for="trader_file" class="upload-text" style="cursor: pointer;">
+                                    <i class="fas fa-upload fa-3x text-success mb-3 d-block"></i>
+                                    <h5>Drop CSV file here or click to browse</h5>
+                                    <p class="text-muted mb-0">Hyperliquid-style trading data</p>
+                                </label>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <strong>Expected columns:</strong> date, trader_id, pnl/profit, leverage (optional)
+                                </small>
+                                <div id="trader-file-info" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div id="upload-progress" class="mb-4" style="display: none;">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Processing Files...</h6>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 style="width: 100%"></div>
+                        </div>
+                        <small class="text-muted">This may take a few minutes for large files</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center mb-5">
+                <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">
+                    <i class="fas fa-cogs me-2"></i>
+                    Process & Analyze Data
+                </button>
+            </div>
+        </form>
+
+        <!-- Features Overview -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                        <h5>Automated Analysis</h5>
+                        <p class="text-muted">
+                            Automatically detects columns and processes your data to find correlations
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-robot fa-3x text-success mb-3"></i>
+                        <h5>AI Predictions</h5>
+                        <p class="text-muted">
+                            Trains machine learning models to predict trading success based on sentiment
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                        <h5>Interactive Charts</h5>
+                        <p class="text-muted">
+                            Generates beautiful visualizations and actionable insights from your data
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Format Guide -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    CSV Format Guide
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><strong>Market Sentiment CSV:</strong></h6>
+                        <div class="bg-light p-3 rounded">
+                            <code>
+                                date,fear_greed_index,classification<br>
+                                2024-01-01,25,Fear<br>
+                                2024-01-02,75,Greed<br>
+                                2024-01-03,50,Neutral
+                            </code>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><strong>Trader Performance CSV:</strong></h6>
+                        <div class="bg-light p-3 rounded">
+                            <code>
+                                date,trader_id,pnl,leverage<br>
+                                2024-01-01,trader_1,150.50,2.5<br>
+                                2024-01-01,trader_2,-75.25,5.0<br>
+                                2024-01-02,trader_1,200.00,3.0
+                            </code>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        <strong>Tip:</strong> The system automatically detects column names, so variations like 
+                        'profit_loss', 'return', 'sentiment_score' will work too!
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enhanced file validation with size checking
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function validateFile(file, infoElementId) {
+    const maxSize = 1024 * 1024 * 1024; // 1GB
+    const infoElement = document.getElementById(infoElementId);
+    
+    if (file.size > maxSize) {
+        infoElement.innerHTML = `
+            <div class="alert alert-danger alert-sm">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                File too large: ${formatFileSize(file.size)} (Max: 1GB)
+            </div>`;
+        return false;
+    } else {
+        infoElement.innerHTML = `
+            <div class="alert alert-success alert-sm">
+                <i class="fas fa-check-circle me-1"></i>
+                File size: ${formatFileSize(file.size)} ✓
+            </div>`;
+        return true;
+    }
+}
+
+// File input change handlers with validation
+document.getElementById('sentiment_file').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const fileName = file.name;
+        const isValid = validateFile(file, 'sentiment-file-info');
+        
+        if (isValid) {
+            e.target.parentElement.querySelector('.upload-text').innerHTML = 
+                `<i class="fas fa-check-circle text-success fa-2x mb-2 d-block"></i>
+                 <h6>${fileName}</h6>
+                 <small class="text-success">Ready to upload</small>`;
+        } else {
+            e.target.parentElement.querySelector('.upload-text').innerHTML = 
+                `<i class="fas fa-exclamation-triangle text-danger fa-2x mb-2 d-block"></i>
+                 <h6>${fileName}</h6>
+                 <small class="text-danger">File too large</small>`;
+        }
+    }
+});
+
+document.getElementById('trader_file').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+        const file = e.target.files[0];
+        const fileName = file.name;
+        const isValid = validateFile(file, 'trader-file-info');
+        
+        if (isValid) {
+            e.target.parentElement.querySelector('.upload-text').innerHTML = 
+                `<i class="fas fa-check-circle text-success fa-2x mb-2 d-block"></i>
+                 <h6>${fileName}</h6>
+                 <small class="text-success">Ready to upload</small>`;
+        } else {
+            e.target.parentElement.querySelector('.upload-text').innerHTML = 
+                `<i class="fas fa-exclamation-triangle text-danger fa-2x mb-2 d-block"></i>
+                 <h6>${fileName}</h6>
+                 <small class="text-danger">File too large</small>`;
+        }
+    }
+});
+
+// Form submission with progress indicator
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const sentimentFile = document.getElementById('sentiment_file').files[0];
+    const traderFile = document.getElementById('trader_file').files[0];
+    
+    // Validate both files before submission
+    if (!sentimentFile || !traderFile) {
+        e.preventDefault();
+        alert('Please select both files before submitting.');
+        return;
+    }
+    
+    const maxSize = 1024 * 1024 * 1024; // 1GB
+    if (sentimentFile.size > maxSize || traderFile.size > maxSize) {
+        e.preventDefault();
+        alert('One or both files exceed the 1GB limit. Please use smaller files.');
+        return;
+    }
+    
+    // Show progress indicator
+    document.getElementById('upload-progress').style.display = 'block';
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerHTML = 
+        '<i class="fas fa-spinner fa-spin me-2"></i>Processing Large Files...';
+    
+    // Scroll to progress bar
+    document.getElementById('upload-progress').scrollIntoView({ behavior: 'smooth' });
+});
+
+// Enhanced drag and drop with file size validation
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadAreas = document.querySelectorAll('.upload-area');
+    
+    uploadAreas.forEach(area => {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            area.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            area.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            area.addEventListener(eventName, unhighlight, false);
+        });
+        
+        area.addEventListener('drop', handleDrop, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function highlight(e) {
+        e.currentTarget.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        e.currentTarget.classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        const input = e.currentTarget.querySelector('input[type="file"]');
+        
+        if (input && files.length > 0) {
+            const file = files[0];
+            
+            // Check file type
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                alert('Please upload only CSV files.');
+                return;
+            }
+            
+            input.files = files;
+            
+            // Trigger change event for validation
+            const event = new Event('change', { bubbles: true });
+            input.dispatchEvent(event);
+        }
+    }
+});
+</script>
+<div class="text-center mb-3">
+    <button type="button" class="btn btn-outline-info" id="debugBtn">
+        <i class="fas fa-bug me-2"></i>
+        Debug File Structure
+    </button>
+</div>
+
+<script>
+document.getElementById('debugBtn').addEventListener('click', function() {
+    const sentimentFile = document.getElementById('sentiment_file').files[0];
+    const traderFile = document.getElementById('trader_file').files[0];
+    
+    if (!sentimentFile || !traderFile) {
+        alert('Please select both files first');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('sentiment_file', sentimentFile);
+    formData.append('trader_file', traderFile);
+    
+    fetch('/debug-upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Debug info:', data);
+        
+        // Create a modal or alert with the debug information
+        let debugText = 'FILE STRUCTURE DEBUG:\n\n';
+        
+        if (data.sentiment) {
+            debugText += 'SENTIMENT FILE:\n';
+            debugText += `Columns: ${data.sentiment.columns ? data.sentiment.columns.join(', ') : 'Error loading'}\n`;
+            if (data.sentiment.sample_data) {
+                debugText += `Sample data: ${JSON.stringify(data.sentiment.sample_data[0], null, 2)}\n\n`;
+            }
+        }
+        
+        if (data.trader) {
+            debugText += 'TRADER FILE:\n';
+            debugText += `Columns: ${data.trader.columns ? data.trader.columns.join(', ') : 'Error loading'}\n`;
+            if (data.trader.sample_data) {
+                debugText += `Sample data: ${JSON.stringify(data.trader.sample_data[0], null, 2)}\n`;
+            }
+        }
+        
+        // Show in a modal or copy to clipboard
+        navigator.clipboard.writeText(debugText).then(() => {
+            alert('Debug information copied to clipboard!\n\nPlease paste it in the chat so I can help fix the date format issue.');
+        }).catch(() => {
+            alert(debugText);
+        });
+    })
+    .catch(error => {
+        console.error('Debug error:', error);
+        alert('Debug failed: ' + error);
+    });
+});
+</script>
+{% endblock %}

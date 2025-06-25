@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Insights - Upload Analysis{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-lightbulb me-2"></i>
+            AI-Powered Insights & Analysis
+        </h2>
+
+        <!-- Market Sentiment Impact -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Market Sentiment Impact on Trading Performance
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if insights.pnl_by_sentiment %}
+                <div class="row">
+                    {% for sentiment, pnl in insights.pnl_by_sentiment.items() %}
+                    <div class="col-md-4 text-center">
+                        <div class="p-3 border rounded">
+                            <h4 class="
+                                {% if sentiment == 'Greed' %}text-success
+                                {% elif sentiment == 'Fear' %}text-danger
+                                {% else %}text-warning{% endif %}
+                            ">{{ sentiment }}</h4>
+                            <p class="h5">${{ "%.2f"|format(pnl) }}</p>
+                            <small class="text-muted">Average PnL</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <hr>
+                <div class="alert alert-info">
+                    <strong>Key Finding:</strong> 
+                    {% set sentiment_items = insights.pnl_by_sentiment.items() | list %}
+                    {% if sentiment_items %}
+                        {% set best_sentiment = sentiment_items | sort(attribute='1', reverse=true) | first %}
+                        {% set worst_sentiment = sentiment_items | sort(attribute='1') | first %}
+                        Traders perform best during <strong>{{ best_sentiment[0] }}</strong> market conditions 
+                        (avg PnL: ${{ "%.2f"|format(best_sentiment[1]) }}), while 
+                        <strong>{{ worst_sentiment[0] }}</strong> periods show lower performance 
+                        (avg PnL: ${{ "%.2f"|format(worst_sentiment[1]) }}).
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- AI Model Insights -->
+        {% if model_results %}
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-robot me-2"></i>
+                    AI Model Predictions & Feature Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="feature-list">
+                            <h6><strong>Model Performance:</strong></h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check-circle text-success me-2"></i>
+                                    Accuracy: <strong>{{ "%.1f"|format(model_results.accuracy * 100) }}%</strong>
+                                </li>
+                                <li><i class="fas fa-database text-info me-2"></i>
+                                    Training samples: <strong>{{ model_results.total_samples }}</strong>
+                                </li>
+                                <li><i class="fas fa-vial text-warning me-2"></i>
+                                    Test samples: <strong>{{ model_results.test_samples }}</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-list">
+                            <h6><strong>Most Important Features:</strong></h6>
+                            <ul class="list-unstyled">
+                                {% for feature, importance in model_results.feature_importance.items() %}
+                                <li>
+                                    <i class="fas fa-star text-warning me-2"></i>
+                                    <strong>{{ feature.replace('_', ' ').title() }}:</strong> 
+                                    {{ "%.1f"|format(importance * 100) }}%
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-success">
+                    <strong>AI Insight:</strong> 
+                    {% set top_feature = model_results.feature_importance.items() | list | sort(attribute='1', reverse=true) | first %}
+                    The most predictive factor for trading success is <strong>{{ top_feature[0].replace('_', ' ').title() }}</strong>, 
+                    accounting for {{ "%.1f"|format(top_feature[1] * 100) }}% of the model's decision-making process.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Top Traders Analysis -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>
+                    Top Performer Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if insights.top_traders %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Trader ID</th>
+                                <th>Total PnL</th>
+                                <th>Performance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for trader, pnl in insights.top_traders.items() %}
+                            <tr>
+                                <td><strong>{{ loop.index }}</strong></td>
+                                <td><code>{{ trader }}</code></td>
+                                <td>${{ "%.2f"|format(pnl) }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        {% set max_pnl = insights.top_traders.values() | list | max %}
+                                        {% set width = ((pnl / max_pnl) * 100) if max_pnl > 0 else 0 %}
+                                        <div class="progress-bar bg-success" style="width: {{ width }}%"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if pnl > 0 %}
+                                        <span class="badge bg-success">Profitable</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Loss</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Risk Management Insights -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Risk Management Patterns
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if insights.leverage_by_sentiment %}
+                <div class="row mb-3">
+                    {% for sentiment, leverage in insights.leverage_by_sentiment.items() %}
+                    <div class="col-md-4 text-center">
+                        <div class="p-3 border rounded">
+                            <h5 class="
+                                {% if sentiment == 'Greed' %}text-success
+                                {% elif sentiment == 'Fear' %}text-danger
+                                {% else %}text-warning{% endif %}
+                            ">{{ sentiment }}</h5>
+                            <p class="h4 text-primary">{{ "%.1f"|format(leverage) }}x</p>
+                            <small class="text-muted">Avg Leverage</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="alert alert-warning">
+                    <strong>Risk Insight:</strong> 
+                    {% set leverage_items = insights.leverage_by_sentiment.items() | list %}
+                    {% if leverage_items %}
+                        {% set highest_lev = leverage_items | sort(attribute='1', reverse=true) | first %}
+                        {% set lowest_lev = leverage_items | sort(attribute='1') | first %}
+                        Traders use highest leverage during <strong>{{ highest_lev[0] }}</strong> periods 
+                        ({{ "%.1f"|format(highest_lev[1]) }}x) and lowest during 
+                        <strong>{{ lowest_lev[0] }}</strong> periods ({{ "%.1f"|format(lowest_lev[1]) }}x).
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Profitability Stats -->
+                {% if insights.profitable_trades and insights.loss_trades %}
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h4 class="text-success">{{ insights.profitable_trades }}</h4>
+                            <p class="mb-0">Profitable Trades</p>
+                            {% if insights.avg_profit %}
+                                <small class="text-muted">Avg: ${{ "%.2f"|format(insights.avg_profit) }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h4 class="text-danger">{{ insights.loss_trades }}</h4>
+                            <p class="mb-0">Loss Trades</p>
+                            {% if insights.avg_loss %}
+                                <small class="text-muted">Avg: ${{ "%.2f"|format(insights.avg_loss) }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Trading Activity Analysis -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Trading Activity by Sentiment
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if insights.volume_by_sentiment %}
+                <div class="row">
+                    {% for sentiment, volume in insights.volume_by_sentiment.items() %}
+                    <div class="col-md-4 text-center">
+                        <div class="p-3 border rounded">
+                            <h5 class="
+                                {% if sentiment == 'Greed' %}text-success
+                                {% elif sentiment == 'Fear' %}text-danger
+                                {% else %}text-warning{% endif %}
+                            ">{{ sentiment }}</h5>
+                            <p class="h4 text-info">{{ volume }}</p>
+                            <small class="text-muted">Total Trades</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    {% set total_volume = insights.volume_by_sentiment.values() | sum %}
+                    {% set most_active = insights.volume_by_sentiment.items() | list | sort(attribute='1', reverse=true) | first %}
+                    <div class="alert alert-info">
+                        <strong>Activity Pattern:</strong> 
+                        Most trading activity occurs during <strong>{{ most_active[0] }}</strong> periods 
+                        ({{ most_active[1] }} trades, {{ "%.1f"|format((most_active[1] / total_volume) * 100) }}% of total).
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Key Takeaways -->
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-key me-2"></i>
+                    Key Takeaways & Actionable Insights
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="fas fa-check-circle me-2"></i>Positive Findings</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Sentiment Correlation:</strong> Clear relationship between market sentiment and trading performance
+                            </li>
+                            {% if model_results and model_results.accuracy > 0.6 %}
+                            <li class="list-group-item">
+                                <strong>Predictable Patterns:</strong> AI model achieved {{ "%.1f"|format(model_results.accuracy * 100) }}% accuracy in predicting success
+                            </li>
+                            {% endif %}
+                            <li class="list-group-item">
+                                <strong>Risk Adaptation:</strong> Traders adjust leverage based on market conditions
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Data Quality:</strong> {{ insights.total_trades }} trades analyzed across {{ insights.date_range }}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning"><i class="fas fa-exclamation-triangle me-2"></i>Areas for Improvement</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Market Timing:</strong> Understanding sentiment cycles can improve entry/exit timing
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Risk Management:</strong> Leverage usage patterns suggest room for optimization
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Consistency:</strong> Performance varies significantly across different market conditions
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Data Collection:</strong> More features could improve prediction accuracy
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4">
+            <a href="/dashboard" class="btn btn-primary me-3">
+                <i class="fas fa-chart-bar me-2"></i>
+                View Dashboard
+            </a>
+            <a href="/api/insights" class="btn btn-outline-info me-3" target="_blank">
+                <i class="fas fa-download me-2"></i>
+                Export Data (JSON)
+            </a>
+            <a href="/reset" class="btn btn-outline-secondary">
+                <i class="fas fa-refresh me-2"></i>
+                Upload New Data
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
