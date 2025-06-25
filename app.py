@@ -1076,11 +1076,11 @@ def make_json_serializable(obj):
         return obj
 
 if __name__ == '__main__':
-    # For local development
-    app.run(debug=True, host='0.0.0.0', port=5000)
-else:
-    # For production deployment
-    import logging
-    gunicorn_logger = logging.getLogger('gunicorn.error')
-    app.logger.handlers = gunicorn_logger.handlers
-    app.logger.setLevel(gunicorn_logger.level)
+    # Create required directories
+    os.makedirs('uploads', exist_ok=True)
+    os.makedirs('static/plots', exist_ok=True)
+    os.makedirs('models', exist_ok=True)
+    
+    # Run the app
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
